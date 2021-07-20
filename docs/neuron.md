@@ -69,3 +69,12 @@ Different dendrites branches have different conductivity and effect on target ne
 # Neural coding
 https://en.wikipedia.org/wiki/Neural_coding
 It is a neuroscience field concerned with characterising the **hypothetical** relationship between the stimulus and the individual or ensemble neuronal responses and the relationship among the electrical activity of the neurons in the ensemble. Based on the theory that sensory and other information is represented in the brain by networks of neurons, it is thought that neurons can encode both digital and analog information.
+* Rate coding - The rate coding model of neuronal firing communication states that as the intensity of a stimulus increases, the frequency or rate of action potentials, or "spike firing", increases. Rate coding is sometimes called frequency coding. 
+* Temporal coding - Neurons exhibit high-frequency fluctuations of firing-rates which could be noise or could carry information. Rate coding models suggest that these irregularities are noise, while temporal coding models suggest that they encode information
+* Population coding - Population coding is a method to represent stimuli by using the joint activities of a number of neurons. In population coding, each neuron has a distribution of responses over some set of inputs, and the responses of many neurons may be combined to determine some value about the inputs.
+* Sparse coding - The sparse code is when each item is encoded by the strong activation of a relatively small set of neurons. For each item to be encoded, this is a different subset of all available neurons. In contrast to sensor-sparse coding, sensor-dense coding implies that all information from possible sensor locations is known. 
+
+# Synaptic plasticity
+https://en.wikipedia.org/wiki/Synaptic_plasticity
+The ability of synapses to strengthen or weaken over time, in response to increases or decreases in their activity.
+

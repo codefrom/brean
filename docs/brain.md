@@ -101,3 +101,4 @@ Functions:
 * Sense of smell and pheromone-processing
 * Reward
 * Memory modulation
+* Emotions (!)

@@ -25,4 +25,5 @@ Functions:
 #### Fourth ventricle
 Part of aqueduct system of a human brain
 #### Cerebellum
-Mainly motor control function
+Mainly motor control function. May be involved in learning motions, movements.
+### Midbrain

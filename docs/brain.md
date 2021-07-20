@@ -67,7 +67,7 @@ Hormones producing.
 
 #### Cerebrum (most interesting stuff from most interesting stuff) 
 Containing the cerebral cortex (of the two cerebral hemispheres), as well as several subcortical structures, including the hippocampus, basal ganglia, and olfactory bulb. 
-##### Cerebral cortex
+##### Cerebral cortex (neocortex)
 Layers:
 * I - contains few scattered neurons, including GABAergic rosehip neurons. Layer I consists largely of extensions of apical dendritic tufts of pyramidal neurons and horizontally oriented axons, as well as glial cells.
 * II - external granular layer, contains small pyramidal neurons and numerous stellate neurons.
@@ -85,3 +85,19 @@ The whole of the cerebral cortex was divided into 52 different areas...
 * Sensory areas - areas connected to thalamus
 * Motor areas - movement and stuff
 * Association areas - abstract thinking and language (preasumably?)
+
+###### Olfactory is different
+Sense of smell don't come from thalamus, instead it comes directly to cerebrum.
+
+### Limbic system
+#### Hippocampus
+Functions:
+* Spatial memory and navigation
+* Learning (?)
+* Memory
+* Reward system
+#### Amygdala
+* Emotional learning
+* Sense of smell and pheromone-processing
+* Reward
+* Memory modulation

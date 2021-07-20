@@ -60,4 +60,12 @@ Neurons can be classified based on their "electrical" activity:
 Those are chemical messengers thats do the job of transmitting signal from one neuron to another in synapse. There are quite a lot of them and they typically do inhibit, excite or modulate.
 I will not focus on this for purpose of modelling, because reaction for neurotransmitter is based on receptor and can be different for different neurons/cells.
 
+## Autapse
+Neuron can transmit signal to itself from axon to dendrite.
 
+## Dendrites are complex
+Different dendrites branches have different conductivity and effect on target neuron.
+
+# Neural coding
+https://en.wikipedia.org/wiki/Neural_coding
+It is a neuroscience field concerned with characterising the **hypothetical** relationship between the stimulus and the individual or ensemble neuronal responses and the relationship among the electrical activity of the neurons in the ensemble. Based on the theory that sensory and other information is represented in the brain by networks of neurons, it is thought that neurons can encode both digital and analog information.

@@ -65,5 +65,23 @@ Part of aqueduct system of a human brain
 ##### Pituitary gland (hypophysis)
 Hormones producing.
 
-#### Cerebrum
+#### Cerebrum (most interesting stuff from most interesting stuff) 
 Containing the cerebral cortex (of the two cerebral hemispheres), as well as several subcortical structures, including the hippocampus, basal ganglia, and olfactory bulb. 
+##### Cerebral cortex
+Layers:
+* I - contains few scattered neurons, including GABAergic rosehip neurons. Layer I consists largely of extensions of apical dendritic tufts of pyramidal neurons and horizontally oriented axons, as well as glial cells.
+* II - external granular layer, contains small pyramidal neurons and numerous stellate neurons.
+* III - external pyramidal layer, contains predominantly small and medium-size pyramidal neurons, as well as non-pyramidal neurons with vertically oriented intracortical axons.
+* IV -  internal granular layer, contains different types of stellate and pyramidal cells, and is the main target of thalamocortical afferents from thalamus type C neurons as well as intra-hemispheric corticocortical afferents.
+* V - internal pyramidal layer, contains large pyramidal neurons. Axons from these leave the cortex and connect with subcortical structures including the basal ganglia.
+*  VI - polymorphic or multiform layer, contains few large pyramidal neurons and many small spindle-like pyramidal and multiform neurons; layer VI sends efferent fibers to the thalamus, establishing a very precise reciprocal interconnection between the cortex and the thalamus.
+
+Columns:
+The cortical layers are not simply stacked one over the other; there exist characteristic connections between different layers and neuronal types, which span all the thickness of the cortex. These cortical microcircuits are grouped into cortical columns and minicolumns. It has been proposed that the minicolumns are the basic functional units of the cortex.
+
+###### Functions
+https://upload.wikimedia.org/wikipedia/commons/d/db/Constudproc.png
+The whole of the cerebral cortex was divided into 52 different areas...
+* Sensory areas - areas connected to thalamus
+* Motor areas - movement and stuff
+* Association areas - abstract thinking and language (preasumably?)

@@ -4,6 +4,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.codefrom.test.ai.brean.generators.BiomeDescriptionGenerator;
+import ru.codefrom.test.ai.brean.generators.BiomeGenerator;
+import ru.codefrom.test.ai.brean.model.Biome;
 import ru.codefrom.test.ai.brean.model.BiomeDescription;
 
 import java.util.List;
@@ -13,9 +15,11 @@ public class Application {
 
     public static void main(String[] args) {
         long seed = 123L;
+        int biomeDescriptionMaximumCount = 10;
+        int biomesMaximumCount = 5;
         // 1. generate biome descriptions
         BiomeDescriptionGenerator biomeDescriptionGenerator = new BiomeDescriptionGenerator(seed);
-        List<BiomeDescription> biomeDescriptionList = biomeDescriptionGenerator.generate(10);
+        List<BiomeDescription> biomeDescriptionList = biomeDescriptionGenerator.generate(biomeDescriptionMaximumCount);
 
         String biomeDescriptions = StringUtils.join(biomeDescriptionList, "\n");
 
@@ -23,8 +27,16 @@ public class Application {
         logger.info(biomeDescriptions);
 
         // 2. generate biomes
+        BiomeGenerator biomeGenerator = new BiomeGenerator(biomeDescriptionList, seed);
+        List<Biome> biomesList = biomeGenerator.generate(biomesMaximumCount);
+
+        String biomes = StringUtils.join(biomesList, "\n");
+
+        logger.info("============= Biomes ========================");
+        logger.info(biomes);
 
         // 3. position biomes in space
+
 
         // 4. compact neurons
 

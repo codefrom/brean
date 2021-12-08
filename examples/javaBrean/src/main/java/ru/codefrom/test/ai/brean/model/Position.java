@@ -1,9 +1,14 @@
 package ru.codefrom.test.ai.brean.model;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class Position {
-    Integer[] coordinatesXYZ = new Integer[3];
-    Double[] rotationXYZ = new Double[3];
+    @Builder.Default
+    int[] coordinatesXYZ = new int[3];
+
+    @Builder.Default
+    double[] rotationXYZ = new double[3];
 }

@@ -2,7 +2,7 @@ package ru.codefrom.test.ai.brean.generators;
 
 import ru.codefrom.test.ai.brean.model.BiomeDescription;
 import ru.codefrom.test.ai.brean.model.BiomePopulationDescription;
-import ru.codefrom.test.ai.brean.model.BiomeShape;
+import ru.codefrom.test.ai.brean.general.Shape;
 import ru.codefrom.test.ai.brean.model.NeuronType;
 
 import java.util.ArrayList;
@@ -20,7 +20,7 @@ public class BiomeDescriptionGenerator extends AbstractGenerator<BiomeDescriptio
     protected BiomeDescription generateOne() {
         // 1. generate shape
         // 1.1 choose shape type
-        BiomeShape shape = randomEnum(BiomeShape.class);
+        Shape shape = randomEnum(Shape.class);
         // 1.2 generate boundaries
         int volume = randomCount(volumeMaxSize);
         int[] boundaries = generateBoundaries(shape, volume);
@@ -51,7 +51,7 @@ public class BiomeDescriptionGenerator extends AbstractGenerator<BiomeDescriptio
                 .build();
     }
 
-    private int[] generateBoundaries(BiomeShape shape, int volume) {
+    private int[] generateBoundaries(Shape shape, int volume) {
         switch (shape) {
             case BOX:
                 // volume = width * height * depth
@@ -79,7 +79,7 @@ public class BiomeDescriptionGenerator extends AbstractGenerator<BiomeDescriptio
         }
     }
 
-    private int getVolume(BiomeShape shape, int[] boundaries) {
+    private int getVolume(Shape shape, int[] boundaries) {
         switch (shape) {
             case BOX:
                 // volume = width * height * depth

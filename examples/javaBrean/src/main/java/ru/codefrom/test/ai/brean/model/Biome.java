@@ -13,9 +13,16 @@ public class Biome {
     Position origin;
 
     public void rotateTo(double[] rotation) {
-        origin.setRotationXYZ(rotation);
         for (int i = 0; i < neurons.size(); i++) {
             neurons.get(i).rotateAroundPoint(origin, rotation);
         }
+        origin.setRotationXYZ(rotation);
+    }
+
+    public void moveTo(int[] position) {
+        for (int i = 0; i < neurons.size(); i++) {
+            neurons.get(i).moveByOrigin(origin, position);
+        }
+        origin.setCoordinatesXYZ(position);
     }
 }

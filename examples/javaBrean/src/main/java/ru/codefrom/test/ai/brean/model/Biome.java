@@ -11,6 +11,7 @@ public class Biome {
     BiomeDescription baseDescription;
     List<Neuron> neurons;
     Position origin;
+    String name;
 
     public void rotateTo(double[] rotation) {
         for (int i = 0; i < neurons.size(); i++) {

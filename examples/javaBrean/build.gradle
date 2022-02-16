@@ -10,6 +10,7 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.jetbrains:annotations:19.0.0'
     compileOnly 'org.projectlombok:lombok:1.18.22'
     annotationProcessor 'org.projectlombok:lombok:1.18.22'
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'

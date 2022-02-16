@@ -1,5 +1,6 @@
 package ru.codefrom.test.ai.brean.generators;
 
+import ru.codefrom.test.ai.brean.general.Constants;
 import ru.codefrom.test.ai.brean.model.BiomeDescription;
 import ru.codefrom.test.ai.brean.model.BiomePopulationDescription;
 import ru.codefrom.test.ai.brean.general.Shape;
@@ -9,8 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BiomeDescriptionGenerator extends AbstractGenerator<BiomeDescription> {
-    public static int populationsMaxCount = 10;
-    public static int volumeMaxSize = 1000;
+
 
     public BiomeDescriptionGenerator(long seed) {
         super(seed);
@@ -22,12 +22,12 @@ public class BiomeDescriptionGenerator extends AbstractGenerator<BiomeDescriptio
         // 1.1 choose shape type
         Shape shape = randomEnum(Shape.class);
         // 1.2 generate boundaries
-        int volume = randomCount(volumeMaxSize);
+        int volume = randomCount(Constants.MAX_VOLUME_SIZE);
         int[] boundaries = generateBoundaries(shape, volume);
         int realVolume = getVolume(shape, boundaries);
         // 2. generate populations
         // 2.1. generate populations count
-        int populationsCount = randomCount(populationsMaxCount);
+        int populationsCount = randomCount(Constants.MAX_POPULATIONS_COUNT);
         // 2.2. generate each population description
         List<BiomePopulationDescription> populations = new ArrayList<>(populationsCount);
         for (int i = 0; i < populationsCount; i++) {
@@ -43,10 +43,11 @@ public class BiomeDescriptionGenerator extends AbstractGenerator<BiomeDescriptio
     }
 
     private BiomePopulationDescription generatePopulation(int volume) {
-        NeuronType type = randomEnum(NeuronType.class);
+//        NeuronType type = randomEnum(NeuronType.class);
         int neuronsCount = randomCount(volume);
         return BiomePopulationDescription.builder()
-                .neuronType(type)
+                //.neuronType(type)
+                .neuronType(NeuronType.INOUT)
                 .count(neuronsCount)
                 .build();
     }

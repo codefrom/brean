@@ -7,16 +7,16 @@ import java.util.List;
 import java.util.Random;
 
 public class AbstractTransformator<T> {
-    protected List<Biome> biomes;
+    protected List<T> objects;
     protected Random random;
 
     private AbstractTransformator() {
-        biomes = new ArrayList<Biome>();
+        objects = new ArrayList<T>();
         random = new Random();
     }
 
-    public AbstractTransformator(List<Biome> biomesList, long seed) {
-        biomes = biomesList;
+    public AbstractTransformator(List<T> objectsList, long seed) {
+        objects = objectsList;
         random = new Random(seed);
     }
 

@@ -21,14 +21,14 @@ public class BiomeGenerator extends AbstractGenerator<Biome> {
         for (BiomeDescription biomeDescription: biomeDescriptionList) {
             int generateBiomesCount = randomCount(maximumCount);
             for (int i = 0; i < generateBiomesCount; i++) {
-                Biome biome = generateOne(biomeDescription);
+                Biome biome = generateOne(biomeDescription, i);
                 biomes.add(biome);
             }
         }
         return biomes;
     }
 
-    protected Biome generateOne(BiomeDescription biomeDescription) {
+    protected Biome generateOne(BiomeDescription biomeDescription, int num) {
         // generate neuron populations
         List<Neuron> neurons = new ArrayList<>();
         for (BiomePopulationDescription populationDescription: biomeDescription.getPopulations()) {
@@ -38,9 +38,15 @@ public class BiomeGenerator extends AbstractGenerator<Biome> {
         }
 
         // generate biome
+        int[] coordinates = getRandomBoundCoordinates(biomeDescription);
+        Position position = Position.builder()
+                .coordinatesXYZ(coordinates)
+                .build();
         Biome biome = Biome.builder()
                 .baseDescription(biomeDescription)
                 .neurons(neurons)
+                .origin(position)
+                .name("Biome_" + num)
                 .build();
         return biome;
     }

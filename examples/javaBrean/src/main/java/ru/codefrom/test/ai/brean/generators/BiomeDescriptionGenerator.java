@@ -1,98 +1,70 @@
 package ru.codefrom.test.ai.brean.generators;
 
-import ru.codefrom.test.ai.brean.general.Constants;
-import ru.codefrom.test.ai.brean.model.BiomeDescription;
-import ru.codefrom.test.ai.brean.model.BiomePopulationDescription;
-import ru.codefrom.test.ai.brean.general.Shape;
-import ru.codefrom.test.ai.brean.model.NeuronType;
+import lombok.Builder;
+import lombok.Data;
+import ru.codefrom.test.ai.brean.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Data
 public class BiomeDescriptionGenerator extends AbstractGenerator<BiomeDescription> {
+    int populationsInBiomeMaxCount;
+    int neuronsInPopulationMaxCount;
+    int synapseMaxCount;
 
+    // neuron properties
+    @Builder.Default
+    int neuronFireThreshold = 15;
+    @Builder.Default
+    int neuronRefractoryPeriod = 3;
+
+    // synapse properties
+    @Builder.Default
+    int synapseMinStrength = 0;
+    @Builder.Default
+    int synapseMaxStrength = 15;
 
     public BiomeDescriptionGenerator(long seed) {
         super(seed);
     }
 
     @Override
-    protected BiomeDescription generateOne() {
-        // 1. generate shape
-        // 1.1 choose shape type
-        Shape shape = randomEnum(Shape.class);
-        // 1.2 generate boundaries
-        int volume = randomCount(Constants.MAX_VOLUME_SIZE);
-        int[] boundaries = generateBoundaries(shape, volume);
-        int realVolume = getVolume(shape, boundaries);
+    public BiomeDescription generateOne() {
+        String name = randomName("biome");
+
         // 2. generate populations
         // 2.1. generate populations count
-        int populationsCount = randomCount(Constants.MAX_POPULATIONS_COUNT);
+        int populationsCount = randomCount(populationsInBiomeMaxCount);
         // 2.2. generate each population description
-        List<BiomePopulationDescription> populations = new ArrayList<>(populationsCount);
+        List<PopulationDescription> populations = new ArrayList<>(populationsCount);
         for (int i = 0; i < populationsCount; i++) {
-            populations.add(generatePopulation(realVolume));
+            populations.add(generatePopulation(neuronsInPopulationMaxCount));
         }
 
         // 3. build biome description
         return BiomeDescription.builder()
-                .shape(shape)
-                .boundaries(boundaries)
+                .name(name)
                 .populations(populations)
                 .build();
     }
 
-    private BiomePopulationDescription generatePopulation(int volume) {
-//        NeuronType type = randomEnum(NeuronType.class);
+    private PopulationDescription generatePopulation(int volume) {
+        String name = randomName("population");
         int neuronsCount = randomCount(volume);
-        return BiomePopulationDescription.builder()
-                //.neuronType(type)
+        return PopulationDescription.builder()
+                .name(name)
                 .neuronType(NeuronType.INOUT)
-                .count(neuronsCount)
+                .neuronCount(neuronsCount)
+                .synapsesCount(synapseMaxCount)
+                .neuronDescription(NeuronDescription.builder()
+                        .fireThreshold(neuronFireThreshold)
+                        .refractoryPeriod(neuronRefractoryPeriod)
+                        .build())
+                .synapseDescription(SynapseDescription.builder()
+                        .minStrength(synapseMinStrength)
+                        .maxStrength(synapseMaxStrength)
+                        .build())
                 .build();
-    }
-
-    private int[] generateBoundaries(Shape shape, int volume) {
-        switch (shape) {
-            case BOX:
-                // volume = width * height * depth
-                int width = randomCount(volume);
-                int height = randomCount((volume / width));
-                int depth = randomCount(volume / (width * height));
-                return new int[]{width, height, depth};
-            case SPHERE:
-                // volume = 4/3 * Pi * radius ^ 3
-                // radius = cbrt( 3/4 * volume / Pi )
-                int maxRadius = (int)Math.round(Math.cbrt((3.0 * (double) volume)) / (4.0 * Math.PI));
-                maxRadius = (maxRadius == 0) ? 1 : maxRadius;
-                int radius = randomCount(maxRadius);
-                return new int[]{radius};
-            case CYLINDER:
-                // volume = height * Pi * radius ^ 2
-                int heightCyl = randomCount(volume);
-                // radius = sqrt(volume / (height * Pi))
-                int maxRadiusCyl = (int)Math.round(Math.sqrt((double)volume / ((double)heightCyl * Math.PI)));
-                maxRadiusCyl = (maxRadiusCyl == 0) ? 1 : maxRadiusCyl;
-                int radiusCyl = randomCount(maxRadiusCyl);
-                return new int[]{radiusCyl, heightCyl};
-            default:
-                return new int[0];
-        }
-    }
-
-    private int getVolume(Shape shape, int[] boundaries) {
-        switch (shape) {
-            case BOX:
-                // volume = width * height * depth
-                return boundaries[0] * boundaries[1] * boundaries[2];
-            case SPHERE:
-                // volume = 4/3 * Pi * radius ^ 3
-                return (int)Math.round((4.0 * Math.PI * Math.pow(boundaries[0], 3.0) / 3.0));
-            case CYLINDER:
-                // volume = height * Pi * radius ^ 2
-                return boundaries[1] * (int)Math.round(Math.PI * Math.pow(boundaries[0], 2.0));
-            default:
-                return -1;
-        }
     }
 }

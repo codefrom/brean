@@ -7,8 +7,8 @@ import java.util.List;
 
 @Data
 @Builder
-public class Biome {
+public class Population {
     String name;
-    BiomeDescription description;
-    List<Population> populations;
+    PopulationDescription description;
+    List<Neuron> neurons;
 }

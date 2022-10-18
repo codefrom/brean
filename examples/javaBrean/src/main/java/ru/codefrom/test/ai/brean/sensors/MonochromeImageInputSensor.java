@@ -1,61 +1,39 @@
 package ru.codefrom.test.ai.brean.sensors;
 
 import lombok.Data;
-import ru.codefrom.test.ai.brean.model.Neuron;
-import ru.codefrom.test.ai.brean.model.NeuronType;
-import ru.codefrom.test.ai.brean.model.Position;
+import ru.codefrom.test.ai.brean.model.*;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 @Data
 public class MonochromeImageInputSensor extends AbstractSensor {
-    public BufferedImage inputSignal;
-    private int width;
-    private int height;
+    BufferedImage inputSignal;
 
-    public MonochromeImageInputSensor() {
-        width = 1;
-        height = 1;
+    public MonochromeImageInputSensor(SensorDescription description) {
+        super(description);
+        generatePopulation(description.getPopulationDescription());
     }
 
-    public MonochromeImageInputSensor(int width, int height) {
-        this.width = width;
-        this.height = height;
-        generateNeurons();
-    }
-
-
-    public MonochromeImageInputSensor(BufferedImage firstInput) {
-        inputSignal = firstInput;
-        width = firstInput.getWidth();
-        height = firstInput.getHeight();
-        generateNeurons();
-    }
-
-    private void generateNeurons() {
-        neurons = new ArrayList<>();
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                // generate
-                int[] coordinates = {i, j, 0};
-                // cones, for simplicity - R cones
-                Position position = Position.builder()
-                        .coordinatesXYZ(coordinates)
-                        .build();
-                Neuron neuron = Neuron.builder()
-                        .position(position)
-                        .type(NeuronType.SENSOR)
-                        .build();
-                neurons.add(neuron);
-            }
+    private void generatePopulation(PopulationDescription description) {
+        ArrayList<Neuron> neurons = new ArrayList<>();
+        for(int i = 0; i < description.getNeuronCount(); i++) {
+            neurons.add(Neuron.builder()
+                    .type(NeuronType.SENSOR)
+                    .description(description.getNeuronDescription())
+                    .build());
         }
+        population = Population.builder()
+                .name(description.getName())
+                .description(description)
+                .neurons(neurons)
+                .build();
     }
 
     public void setInputSignal(BufferedImage input) {
         int newWidth = input.getWidth();
         int newHeight = input.getHeight();
-        if (newWidth != width || newHeight != height) {
+        if (newWidth * newHeight != population.getNeurons().size()) {
             throw new IllegalArgumentException("Wrong dimensions of new input");
         }
 
@@ -65,11 +43,13 @@ public class MonochromeImageInputSensor extends AbstractSensor {
     // Processing one time
     public void tick() {
         // for each pixel output signal to neuron
+        int width = inputSignal.getWidth();
+        int height = inputSignal.getHeight();
         for (int i = 0 ; i < width; i++) {
             for (int j = 0; j < height; j++) {
                 int rgba = inputSignal.getRGB(i, j);
-                neurons.get(i * width + j).input(0, getSignalStrength(getR(rgba)));
-                neurons.get(i * width + j).tick();
+                population.getNeurons().get(i * width + j).input(0, getSignalStrength(getR(rgba)));
+                population.getNeurons().get(i * width + j).tick();
             }
         }
     }
@@ -79,7 +59,12 @@ public class MonochromeImageInputSensor extends AbstractSensor {
     }
 
     public int getSignalStrength(int color) {
-        return color;
+        //return color;
         //return (int)Math.round((double)color / 10.0);
+
+        // color from 0 to 255
+        // maximum strength is 10
+        // so 0 - 24 = 0, 24 - 50 = 1...
+        return (int)Math.floor((double)color / 24.0);
     }
 }

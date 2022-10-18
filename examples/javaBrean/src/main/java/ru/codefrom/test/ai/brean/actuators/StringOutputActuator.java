@@ -2,46 +2,41 @@ package ru.codefrom.test.ai.brean.actuators;
 
 import lombok.Builder;
 import lombok.Data;
-import ru.codefrom.test.ai.brean.model.Neuron;
-import ru.codefrom.test.ai.brean.model.NeuronType;
-import ru.codefrom.test.ai.brean.model.Position;
+import ru.codefrom.test.ai.brean.model.*;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 // TODO: more like letter output
 @Data
 public class StringOutputActuator extends AbstractActuator {
-    int signal;
-    char output;
+    List<Character> output = new ArrayList<>();
 
+    public StringOutputActuator(ActuatorDescription description) {
+        super(description);
+    }
     @Override
-    protected void initNeurons() {
+    protected void initPopulation(PopulationDescription description) {
+        ArrayList<Neuron> neurons = new ArrayList<>();
         for (int i = 0; i < 255; i++) {
-            Position position = Position.builder().build();
             Neuron neuron = Neuron.builder()
                     .type(NeuronType.ACTUATOR)
+                    .description(description.getNeuronDescription())
                     .build();
 
             neurons.add(neuron);
         }
+
+        population = Population.builder()
+                .name(description.getName())
+                .description(description)
+                .neurons(neurons)
+                .build();
     }
 
     @Override
     public void onFire(Neuron neuron) {
-        output = (char)neurons.indexOf(neuron);
-    }
-
-    public void setSignal(String string) {
-        signal = (int)string.charAt(0);
-    }
-
-    @Override
-    public void feedback() {
-        if (feedback == null || feedback.size() == 0) {
-            createFeedback();
-        }
-        feedback.get(signal).input(10); // TODO : why strength is 10?
-        feedback.get(signal).needTick();
+        output.add((char)population.getNeurons().indexOf(neuron));
     }
 }

@@ -2,10 +2,7 @@ package ru.codefrom.test.ai.brean.actuators;
 
 import lombok.Builder;
 import lombok.Data;
-import ru.codefrom.test.ai.brean.model.Neuron;
-import ru.codefrom.test.ai.brean.model.NeuronType;
-import ru.codefrom.test.ai.brean.model.Position;
-import ru.codefrom.test.ai.brean.model.Synapse;
+import ru.codefrom.test.ai.brean.model.*;
 import ru.codefrom.test.ai.brean.sensors.AbstractSensor;
 
 import java.util.ArrayList;
@@ -14,48 +11,23 @@ import java.util.function.Consumer;
 
 @Data
 public abstract class AbstractActuator {
-    public List<Neuron> neurons = new ArrayList<>();;
-    public List<Neuron> feedback = new ArrayList<>();;
+    String name;
+    ActuatorDescription description;
+    Population population;
     Consumer<AbstractActuator> onFire;
 
-    public AbstractActuator() {
-        initNeurons();
-        for(Neuron neuron: neurons) {
+    private AbstractActuator() {}
+
+    public AbstractActuator(ActuatorDescription description) {
+        this.description = description;
+        this.name = description.getName();
+        initPopulation(description.getPopulationDescription());
+        for(Neuron neuron: population.getNeurons()) {
             neuron.setOnFire(x -> fire(x));
         }
     }
 
-    protected abstract void initNeurons();
-
-    public void createFeedback() {
-        for(Neuron neuron: neurons) {
-            List<Synapse> feedbackOutputs = new ArrayList<>();
-            for (Synapse synapse : neuron.getInputs()) {
-                Synapse feedbackSynapse = Synapse.builder()
-                        .from(synapse.getTo())
-                        .to(synapse.getFrom())
-                        .build();
-                feedbackOutputs.add(feedbackSynapse);
-            }
-            // TODO : position
-            Position feedbackNeuronPosition = Position.builder().build();
-            Neuron feedbackNeuron = Neuron.builder()
-                    .outputs(feedbackOutputs)
-                    .position(feedbackNeuronPosition)
-                    .type(NeuronType.IN)
-                    .build();
-
-            Synapse synapse = Synapse.builder()
-                    .from(neuron)
-                    .to(feedbackNeuron)
-                    .build();
-
-            neuron.addOutput(synapse);
-            feedbackNeuron.addInput(synapse);
-
-            feedback.add(feedbackNeuron);
-        }
-    }
+    protected abstract void initPopulation(PopulationDescription description);
 
     private void fire(Neuron neuron) {
         onFire(neuron);
@@ -65,6 +37,4 @@ public abstract class AbstractActuator {
     }
 
     public abstract void onFire(Neuron neuron);
-
-    public abstract void feedback();
 }

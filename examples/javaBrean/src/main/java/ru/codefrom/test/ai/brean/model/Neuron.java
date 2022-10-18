@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 @Builder
 public class Neuron {
     NeuronType type;
+    NeuronDescription description;
 
     @ToString.Exclude
     @Builder.Default
@@ -21,7 +22,6 @@ public class Neuron {
     @ToString.Exclude
     @Builder.Default
     List<Synapse> outputs = new ArrayList<>(); // dendrites
-    Position position;
     int potential; // inner level of signal
     //int threshold; // upper bound of potential, when neuron fires
     boolean touched;
@@ -30,28 +30,16 @@ public class Neuron {
     Consumer<Neuron> onFire;
     Consumer<Neuron> onNeedTick;
 
-
-    public void rotateAroundPoint(Position origin, double[] rotation) {
-        // TODO : move to new position
-    }
-
-    public void moveByOrigin(Position origin, int[] position) {
-        this.position.getCoordinatesXYZ()[0] = this.position.getCoordinatesXYZ()[0] + position[0] - origin.getCoordinatesXYZ()[0];
-        this.position.getCoordinatesXYZ()[1] = this.position.getCoordinatesXYZ()[1] + position[1] - origin.getCoordinatesXYZ()[1];
-        this.position.getCoordinatesXYZ()[2] = this.position.getCoordinatesXYZ()[2] + position[2] - origin.getCoordinatesXYZ()[2];
-    }
-
     public void addPotential(int signalStrength) {
         potential += signalStrength;
-        potential = Math.min(100, potential);
     }
 
     public void input(int signalStrength) {
-        /*if (refractoryTicks > 0) {
+        if (refractoryTicks > 0) {
             // can't get more potential while on refractory
-        } else {*/
+        } else {
             addPotential(signalStrength);
-        /*}*/
+        }
     }
 
     public void input(Neuron input, int signalStrength) {
@@ -65,17 +53,22 @@ public class Neuron {
     // each tick is 1ms...
     public void tick() {
         // remove redundant connections
-        outputs = outputs.stream().filter(x -> x.getStrength() != 0).collect(Collectors.toList());
+        //outputs = outputs.stream().filter(x -> x.getStrength() != 0).collect(Collectors.toList());
 
         if (refractoryTicks > 0) {
             // can't fire while on refractory
             refractoryTicks--;
         } else {
-            //if (potential >= calculateThreshold()) {
-            //if (potential >= 10) {
-            if (potential >= outputs.size()) {
-                refractoryTicks = calculateRefractory(potential);
+            // resting potential is about –70 mV (in model is 0)
+            // threshold potential is around –55 mV (in model is 15)
+            // if potential more than threshold - fire
+            if (potential >= description.getFireThreshold()) {
+                // refractory period is about 1 ms (but fire process is about 2ms), so in model is 3
+                refractoryTicks = description.getRefractoryPeriod();
                 fire();
+            } else {
+                // if potential less than threshold - potential slowly moves to resting
+                rest();
             }
         }
 
@@ -84,38 +77,39 @@ public class Neuron {
         }
 
         // remove redundant connections
-        outputs = outputs.stream().filter(x -> x.getStrength() != 0).collect(Collectors.toList());
+        //outputs = outputs.stream().filter(x -> x.getStrength() != 0).collect(Collectors.toList());
     }
 
-    private int calculateRefractory(int potential) {
-        // TODO : formula for refractory period, minimum is 1 tick
-        return (int)Math.round((double)potential / 10.0) + 1;
-    }
-
-
-    public int calculateThreshold() {
-        // threshold is sum of all out synapses to fire
-        return outputs.stream().mapToInt(x -> Math.abs(x.getStrength())).reduce(0, Integer::sum);
-    }
-
-    private void fire() {
-        int outputWeight = outputs.stream().map(x -> x.getStrength()).reduce(0, Integer::sum);
-        for (Synapse output: outputs) {
-            output.fire((int)Math.round((double)potential * ((double)output.getStrength() / (double)outputWeight)));
+    private void rest() {
+        // if not firing - potential slowly moves towards resting potential (0 in model)
+        if (potential != 0) {
+            if (potential > 0) {
+                potential -= Math.min(potential, 1); // TODO: decrease by 1 each ms (why this value...)
+            } else {
+                potential -= Math.max(potential, -1);
+            }
         }
+    }
+
+    //
+    private void fire() {
+        // potential moves to 0
         potential = 0;
 
-        for (Synapse input : inputs) {
-            input.targetFired();
+        // fire each output synapse
+        for (Synapse output: outputs) {
+            output.fire();
         }
+
+//        // if fired - strengthen input synapses
+//        for (Synapse input : inputs) {
+//            input.targetFired();
+//        }
+
+        // confirm fired event
         if (onFire != null) {
             onFire.accept(this);
         }
-    }
-
-    public int getSignalOutputStrength(Neuron output) {
-        // TODO : add output signal strength function
-        return potential;
     }
 
     public void addOutput(Synapse synapse) {

@@ -8,96 +8,45 @@ import java.util.List;
 
 @Data
 public class BiomeGenerator extends AbstractGenerator<Biome> {
-    List<BiomeDescription> biomeDescriptionList;
+    BiomeDescription biomeDescription;
+    Genome genome;
 
-    public BiomeGenerator(List<BiomeDescription> biomeDescription, long seed) {
+    public BiomeGenerator(long seed) {
         super(seed);
-        this.biomeDescriptionList = biomeDescription;
     }
 
     @Override
-    public List<Biome> generate(int maximumCount) {
-        List<Biome> biomes = new ArrayList<>();
-        for (BiomeDescription biomeDescription: biomeDescriptionList) {
-            int generateBiomesCount = randomCount(maximumCount);
-            for (int i = 0; i < generateBiomesCount; i++) {
-                Biome biome = generateOne(biomeDescription, i);
-                biomes.add(biome);
-            }
-        }
-        return biomes;
-    }
-
-    protected Biome generateOne(BiomeDescription biomeDescription, int num) {
-        // generate neuron populations
-        List<Neuron> neurons = new ArrayList<>();
-        for (BiomePopulationDescription populationDescription: biomeDescription.getPopulations()) {
-            int neuronsCount = randomCount(populationDescription.getCount());
-            List<Neuron> neuronsPopulation = generateNeurons(biomeDescription, populationDescription, neuronsCount);
-            neurons.addAll(neuronsPopulation);
-        }
-
-        // generate biome
-        int[] coordinates = getRandomBoundCoordinates(biomeDescription);
-        Position position = Position.builder()
-                .coordinatesXYZ(coordinates)
-                .build();
-        Biome biome = Biome.builder()
-                .baseDescription(biomeDescription)
-                .neurons(neurons)
-                .origin(position)
-                .name("Biome_" + num)
-                .build();
-        return biome;
-    }
-
-    private List<Neuron> generateNeurons(BiomeDescription biomeDescription, BiomePopulationDescription populationDescription, int neuronsCount) {
-        List<Neuron> neurons = new ArrayList<>();
-        for (int i = 0; i < neuronsCount; i++) {
-            int[] coordinates = getRandomBoundCoordinates(biomeDescription);
-            Position position = Position.builder()
-                    .coordinatesXYZ(coordinates)
+    public Biome generateOne() {
+        // generate populations
+        ArrayList<Population> populations = new ArrayList<>();
+        for(PopulationDescription populationDescription: biomeDescription.getPopulations()) {
+            List<Neuron> neurons = generateNeurons(populationDescription);
+            Population population = Population.builder()
+                    .name(populationDescription.getName())
+                    .description(populationDescription)
+                    .neurons(neurons)
                     .build();
+            populations.add(population);
+        }
+
+        return Biome.builder()
+                .name(biomeDescription.getName())
+                .description(biomeDescription)
+                .populations(populations)
+                .build();
+    }
+
+    private List<Neuron> generateNeurons(PopulationDescription populationDescription) {
+        List<Neuron> neurons = new ArrayList<>();
+        for (int i = 0; i < populationDescription.getNeuronCount(); i++) {
             Neuron neuron = Neuron.builder()
                     .type(populationDescription.getNeuronType())
-                    .position(position)
+                    .description(populationDescription.getNeuronDescription())
                     .build();
             neurons.add(neuron);
         }
         return neurons;
     }
 
-    private int[] getRandomBoundCoordinates(BiomeDescription biomeDescription) {
-        int[] coordinates = new int[3];
-        switch (biomeDescription.getShape()) {
-            case BOX:
-                coordinates[0] = random.nextInt(biomeDescription.getBoundaries()[0]);
-                coordinates[1] = random.nextInt(biomeDescription.getBoundaries()[1]);
-                coordinates[2] = random.nextInt(biomeDescription.getBoundaries()[2]);
-                break;
-            case SPHERE:
-                int distance1 = random.nextInt(biomeDescription.getBoundaries()[0]);
-                double alpha1 = random.nextDouble() * Math.PI * 2.0;
-                double betta1 = random.nextDouble() * Math.PI * 2.0;
-                double gamma1 = random.nextDouble() * Math.PI * 2.0;
-                coordinates[0] = (int)Math.round(Math.cos(alpha1) * (double)distance1);
-                coordinates[1] = (int)Math.round(Math.cos(betta1) * (double)distance1);
-                coordinates[2] = (int)Math.round(Math.cos(gamma1) * (double)distance1);
-                break;
-            case CYLINDER:
-                int distance2 = random.nextInt(biomeDescription.getBoundaries()[1]);
-                double alpha2 = random.nextDouble() * Math.PI * 2.0;
-                double betta2 = random.nextDouble() * Math.PI * 2.0;
-                coordinates[0] = (int)Math.round(Math.cos(alpha2) * (double)distance2);
-                coordinates[1] = (int)Math.round(Math.cos(betta2) * (double)distance2);
-                coordinates[2] = random.nextInt(biomeDescription.getBoundaries()[0]);
-                break;
-        }
-        return coordinates;
-    }
 
-    @Override
-    protected Biome generateOne() {
-        return null;
-    }
 }

@@ -10,8 +10,10 @@ import java.util.List;
 @Data
 @Builder
 public class Brean {
-    public List<Biome> biomes;
-    public List<AbstractSensor> sensors;
-    public List<AbstractActuator> actuators;
+    Genome genome;
+    String name;
+    List<Biome> biomes;
+    List<AbstractSensor> sensors;
+    List<AbstractActuator> actuators;
 
 }

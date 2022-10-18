@@ -10,50 +10,65 @@ import java.util.function.Consumer;
 public class Synapse {
     Neuron from;
     Neuron to;
+    SynapseDescription description;
 
     @Builder.Default
-    int strength = 10; // 0 means no signal gonna be transmitted, synapse will die soon TODO: base strength 10 constant
-    @Builder.Default
-    int firedTicks = 0;
-    @Builder.Default
-    boolean fired = false;
+    int strength = 10; // strength (abs)
+    boolean isExcitatory = true;
+
+//    @Builder.Default
+//    int firedTicks = 0;
+//    @Builder.Default
+//    boolean fired = false;
 
     Consumer<Synapse> onFire;
 
-    public void fire(int potential) {
-        to.input(from, potential);
+    public void fire() {
+        to.input(from, isExcitatory ? strength : -strength);
         to.needTick();
 
-        firedTicks = 20; // TODO: 20 ms time gap constant
-        fired = true;
+//        firedTicks = 20; // TODO: 20 ms time gap constant
+//        fired = true;
         if (onFire != null) {
             onFire.accept(this);
         }
     }
 
     public void tick() {
-        if (fired) {
-            if (firedTicks > 0) {
-                to.needTick();
-                firedTicks--;
-            } else {
-                // weakening
-                firedTicks = 0;
-                fired = false;
-                strength -= 1;
-                strength = Math.max(-100, strength);
-            }
-        }
+//        if (fired) {
+//            if (firedTicks > 0) {
+//                to.needTick();
+//                firedTicks--;
+//            } else {
+//                // weakening
+//                firedTicks = 0;
+//                fired = false;
+//            }
+//        }
     }
 
-    public void targetFired() {
-        if (fired) {
-            // strengthening
-            firedTicks = 0;
-            fired = false;
-            strength += 1;
-            strength = Math.min(100, strength);
-        }
+//    public void targetFired() {
+//        if (fired) {
+//            // strengthening
+//            firedTicks = 0;
+//            fired = false;
+//        }
+//    }
+
+
+    // when learning and getting right result - strengthen connection
+    public void strengthen() {
+        strengthen(1);
+    }
+    public void strengthen(int amount) {
+        strength = Math.min(description.getMaxStrength(), strength + amount);
+    }
+
+    public void weaken() {
+        weaken(1);
+    }
+    public void weaken(int amount) {
+        strength = Math.max(description.getMinStrength(), strength - amount);
     }
 
     @Override

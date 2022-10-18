@@ -2,14 +2,16 @@ package ru.codefrom.test.ai.brean.model;
 
 import lombok.Builder;
 import lombok.Data;
-import ru.codefrom.test.ai.brean.general.Shape;
 
 import java.util.List;
 
+// biome of neurons description
 @Data
 @Builder
 public class BiomeDescription {
-    Shape shape;
-    int[] boundaries;
-    List<BiomePopulationDescription> populations;
+    // name of biome
+    String name;
+
+    // list of neuron population descriptions inside biome
+    List<PopulationDescription> populations;
 }

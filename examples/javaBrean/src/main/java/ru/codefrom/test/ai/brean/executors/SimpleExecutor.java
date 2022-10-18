@@ -1,14 +1,12 @@
 package ru.codefrom.test.ai.brean.executors;
 
+import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.codefrom.test.ai.brean.actuators.AbstractActuator;
 import ru.codefrom.test.ai.brean.general.Constants;
-import ru.codefrom.test.ai.brean.model.Biome;
-import ru.codefrom.test.ai.brean.model.Brean;
-import ru.codefrom.test.ai.brean.model.Neuron;
-import ru.codefrom.test.ai.brean.model.Synapse;
+import ru.codefrom.test.ai.brean.model.*;
 import ru.codefrom.test.ai.brean.sensors.AbstractSensor;
 
 import javax.imageio.ImageIO;
@@ -25,45 +23,72 @@ public class SimpleExecutor extends AbstractExecutor {
     private static Logger logger = LogManager.getLogger(SimpleExecutor.class);
     boolean stop = false;
     List<Neuron> neuronsToTick = new ArrayList<>();
+    int processIterations;
 
-    public SimpleExecutor(Brean inputModel) {
+    public SimpleExecutor(Brean inputModel, int processIterations) {
         super(inputModel);
+        this.processIterations = processIterations;
     }
 
     @Override
     public List<Synapse> process() {
         int currentRun = new Random().nextInt(1000);
         List<Synapse> firedSynapses = new ArrayList<>();
+        List<Synapse> allFiredSynapses = new ArrayList<>();
 
         // prepare neurons
         for(Biome biome : model.getBiomes()) {
-            for(Neuron neuron : biome.getNeurons()) {
+            for(Population population: biome.getPopulations()) {
+                for (Neuron neuron : population.getNeurons()) {
+                    neuron.setPotential(0);
+                    neuron.setRefractoryTicks(0);
+
+                    neuron.setOnNeedTick(x -> {
+                        if (!neuronsToTick.contains(x)) {
+                            neuronsToTick.add(x);
+                        }
+                    });
+
+                    neuron.getOutputs().forEach(x -> x.setOnFire(y -> {
+                        if (!firedSynapses.contains(y)) {
+                            firedSynapses.add(y);
+                        }
+                    }));
+                }
+            }
+        }
+        neuronsToTick.clear();
+
+        // prepare actuators
+        for (AbstractActuator actuator : model.getActuators()) {
+            actuator.setOnFire(x -> { stop = true; });
+            for(Neuron neuron: actuator.getPopulation().getNeurons()) {
+                neuron.setPotential(0);
+                neuron.setRefractoryTicks(0);
+
                 neuron.setOnNeedTick(x -> {
                     if (!neuronsToTick.contains(x)) {
                         neuronsToTick.add(x);
                     }
                 });
+            }
+        }
 
-                neuron.getOutputs().forEach(x -> x.setOnFire(y -> {
-                    if (!firedSynapses.contains(y)) {
-                        firedSynapses.add(y);
-                    }
+        // prepare sensors
+        for (AbstractSensor sensor : model.getSensors()) {
+            for (Neuron neuron : sensor.getPopulation().getNeurons()) {
+                neuron.setPotential(0);
+                neuron.setRefractoryTicks(0);
+
+                neuron.getOutputs().forEach(synapse -> synapse.setOnFire(y -> {
+                   if(!firedSynapses.contains(y)) {
+                       firedSynapses.add(y);
+                   }
                 }));
             }
         }
-        neuronsToTick.clear();
-        // prepare actuators
-        for (AbstractActuator actuator : model.getActuators()) {
-            actuator.setOnFire(x -> { stop = true; });
-            actuator.getNeurons().forEach(a -> a.setOnNeedTick(x -> {
-                if (!neuronsToTick.contains(x)) {
-                    neuronsToTick.add(x);
-                }
-            }));
-        }
-
         // run network
-        for (int i = 0; i < Constants.MAX_PROCESS_ITERATIONS; i++) {
+        for (int i = 0; i < processIterations; i++) {
             if (stop) {
                 stop = false;
                 break;
@@ -72,8 +97,6 @@ public class SimpleExecutor extends AbstractExecutor {
             for(AbstractSensor sensor : model.getSensors()) {
                 sensor.tick();
             }
-
-            //drawNetwork(neuronsToTick, firedSynapses, currentRun, i);
 
             // debug output
             /*List<Biome> activeBiomes = new ArrayList<>();
@@ -97,22 +120,38 @@ public class SimpleExecutor extends AbstractExecutor {
                 neuron.tick();
             }
 
-            // tick actuators every run
-            for(AbstractActuator actuator : model.getActuators()) {
-                actuator.feedback();
-            }
+            // draw network for debug
+//            if (i % 10 == 0)
+                drawNetwork(neuronsToTick, firedSynapses, currentRun, i);
+
+            allFiredSynapses.addAll(firedSynapses);
+            firedSynapses.clear();
         }
 
-        return firedSynapses;
+        return allFiredSynapses;
     }
 
     private void drawNetwork(List<Neuron> neuronsToTick, List<Synapse> firedSynapses, int runId, int iteration) {
         int width = 0;
         int height = 0;
-        for(Biome biome: model.getBiomes()) {
-            int biomeSide = (int)Math.ceil(Math.sqrt(biome.getNeurons().size()));
+        for(AbstractActuator actuator: model.getActuators()) {
+            Population population = actuator.getPopulation();
+            int biomeSide = (int) Math.ceil(Math.sqrt(population.getNeurons().size()));
             width += biomeSide + 2;
             height = Math.max(height, biomeSide + 10 + 2);
+        }
+        for(AbstractSensor sensor: model.getSensors()) {
+            Population population = sensor.getPopulation();
+            int biomeSide = (int) Math.ceil(Math.sqrt(population.getNeurons().size()));
+            width += biomeSide + 2;
+            height = Math.max(height, biomeSide + 10 + 2);
+        }
+        for(Biome biome: model.getBiomes()) {
+            for(Population population: biome.getPopulations()) {
+                int biomeSide = (int) Math.ceil(Math.sqrt(population.getNeurons().size()));
+                width += biomeSide + 2;
+                height = Math.max(height, biomeSide + 10 + 2);
+            }
         }
 
         BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -124,74 +163,78 @@ public class SimpleExecutor extends AbstractExecutor {
         g2d.setColor(Color.BLACK);
 
         int currentOrigin = 0;
-        for(Biome biome: model.getBiomes()) {
-            int biomeSide = (int)Math.ceil(Math.sqrt(biome.getNeurons().size()));
 
+        for(AbstractSensor sensor: model.getSensors()) {
+            Population population = sensor.getPopulation();
+
+            int biomeSide = (int) Math.ceil(Math.sqrt(population.getNeurons().size()));
             // draw label
-            //g2d.drawString(biome.getName(), currentOrigin + 0, 10);
-
-            if (biome.getName().contains("sensor") && biome.getName().contains("actuator")) {
-                g2d.setColor(Color.MAGENTA);
-            } else if (biome.getName().contains("sensor")) {
-                g2d.setColor(Color.RED);
-            } else if (biome.getName().contains("actuator")) {
-                g2d.setColor(Color.BLUE);
-            } else {
-                g2d.setColor(Color.BLACK);
-            }
-
+            //g2d.drawString(sensor.getName(), currentOrigin + 0, 10);
+            // sensor color
+            g2d.setColor(Color.RED);
             // draw square
             g2d.drawRect(currentOrigin + 0, 10, biomeSide + 1, biomeSide + 1);
+            for (int i = 0; i < population.getNeurons().size(); i++) {
+                int x = i / biomeSide;
+                int y = i % biomeSide;
 
-
-            for(int i = 0; i < biome.getNeurons().size(); i++) {
-                int x = i % biomeSide;
-                int y = i / biomeSide;
-
-                Neuron neuron = biome.getNeurons().get(i);
+                Neuron neuron = population.getNeurons().get(i);
                 boolean fired = neuron.getOutputs().stream().anyMatch(s -> firedSynapses.contains(s));
-                boolean isSensorNeuron = model.getSensors().stream().anyMatch(sensor ->
-                    sensor.getNeurons().stream().anyMatch(sensorNeuron ->
-                            sensorNeuron.getOutputs().stream().anyMatch(
-                                    sensorNeuronSynapse -> sensorNeuronSynapse.getTo() == neuron
-                            )
-                    )
-                );
-                boolean isActuatorNeuron = model.getActuators().stream().anyMatch(actuator ->
-                        actuator.getNeurons().stream().anyMatch(actuatorNeuron ->
-                                actuatorNeuron.getInputs().stream().anyMatch(
-                                        actuatorNeuronSynapse -> actuatorNeuronSynapse.getFrom() == neuron
-                                )
-                        )
-                );
 
-                Color neuronColor = Color.GREEN;
-                if (fired) {
-                    if (isSensorNeuron && isActuatorNeuron) {
-                        neuronColor = Color.MAGENTA;
-                    } else if (isSensorNeuron) {
-                        neuronColor = Color.RED;
-                    } else if (isActuatorNeuron) {
-                        neuronColor = Color.BLUE;
-                    } else {
-                        neuronColor = Color.YELLOW;
-                    }
-                } else {
-                    if (isSensorNeuron && isActuatorNeuron) {
-                        neuronColor = Color.PINK;
-                    } else if (isSensorNeuron) {
-                        neuronColor = Color.GRAY;
-                    } else if (isActuatorNeuron) {
-                        neuronColor = Color.CYAN;
-                    } else {
-                        neuronColor = Color.GREEN;
-                    }
-                }
-
+                Color neuronColor = fired ? Color.RED : Color.GRAY;
                 bufferedImage.setRGB(currentOrigin + x + 1, y + 11, neuronColor.getRGB());
             }
-
             currentOrigin += biomeSide + 2;
+        }
+
+        for(AbstractActuator actuator: model.getActuators()) {
+            Population population = actuator.getPopulation();
+
+            int biomeSide = (int) Math.ceil(Math.sqrt(population.getNeurons().size()));
+
+            // draw label
+            //g2d.drawString(actuator.getName(), currentOrigin + 0, 10);
+            // actuator color
+            g2d.setColor(Color.BLUE);
+            // draw square
+            g2d.drawRect(currentOrigin + 0, 10, biomeSide + 1, biomeSide + 1);
+            for (int i = 0; i < population.getNeurons().size(); i++) {
+                int x = i / biomeSide;
+                int y = i % biomeSide;
+
+                Neuron neuron = population.getNeurons().get(i);
+                boolean fired = neuron.getInputs().stream().anyMatch(s -> firedSynapses.contains(s));
+
+                Color neuronColor = fired ? Color.BLUE : Color.CYAN;
+                bufferedImage.setRGB(currentOrigin + x + 1, y + 11, neuronColor.getRGB());
+            }
+            currentOrigin += biomeSide + 2;
+        }
+
+        for(Biome biome: model.getBiomes()) {
+            for(Population population: biome.getPopulations()) {
+                int biomeSide = (int) Math.ceil(Math.sqrt(population.getNeurons().size()));
+
+                // draw label
+                //g2d.drawString(biome.getName(), currentOrigin + 0, 10);
+                // border color
+                g2d.setColor(Color.BLACK);
+                // draw square
+                g2d.drawRect(currentOrigin + 0, 10, biomeSide + 1, biomeSide + 1);
+
+                for (int i = 0; i < population.getNeurons().size(); i++) {
+                    int x = i / biomeSide;
+                    int y = i % biomeSide;
+
+                    Neuron neuron = population.getNeurons().get(i);
+                    boolean fired = neuron.getOutputs().stream().anyMatch(s -> firedSynapses.contains(s));
+
+                    Color neuronColor = fired ? Color.YELLOW : Color.GREEN;
+                    bufferedImage.setRGB(currentOrigin + x + 1, y + 11, neuronColor.getRGB());
+                }
+
+                currentOrigin += biomeSide + 2;
+            }
         }
 
         g2d.dispose();

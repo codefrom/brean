@@ -2,22 +2,29 @@ package ru.codefrom.test.ai.brean.exercisers;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.codefrom.test.ai.brean.actuators.AbstractActuator;
 import ru.codefrom.test.ai.brean.actuators.StringOutputActuator;
 import ru.codefrom.test.ai.brean.datasets.mnist.MnistDataReader;
 import ru.codefrom.test.ai.brean.datasets.mnist.MnistMatrix;
 import ru.codefrom.test.ai.brean.model.Brean;
 import ru.codefrom.test.ai.brean.model.Neuron;
 import ru.codefrom.test.ai.brean.model.Synapse;
-import ru.codefrom.test.ai.brean.sensors.ImageInputSensor;
+import ru.codefrom.test.ai.brean.sensors.AbstractSensor;
 import ru.codefrom.test.ai.brean.sensors.MonochromeImageInputSensor;
+import ru.codefrom.test.ai.brean.sensors.StringInputSensor;
 
+import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MNISTExerciser extends AbstractExerciser {
     private static Logger logger = LogManager.getLogger(MNISTExerciser.class);
+    StringInputSensor answerSensor;
     MonochromeImageInputSensor sensor;
     StringOutputActuator actuator;
     MnistMatrix[] mnistMatrix;
@@ -33,10 +40,14 @@ public class MNISTExerciser extends AbstractExerciser {
         }
     }
 
-    public MNISTExerciser(Brean model, MonochromeImageInputSensor imageInputSensor, StringOutputActuator stringOutputActuator) {
+    public MNISTExerciser(Brean model, List<AbstractSensor> sensors, List<AbstractActuator> actuators) {
         super(model);
-        sensor = imageInputSensor;
-        actuator = stringOutputActuator;
+
+        //MonochromeImageInputSensor imageInputSensor, StringInputSensor stringSensor, StringOutputActuator stringOutputActuator
+
+        sensor = (MonochromeImageInputSensor)sensors.stream().filter(sensor -> sensor.getClass().equals(MonochromeImageInputSensor.class)).findFirst().get();
+        answerSensor = (StringInputSensor)sensors.stream().filter(sensor -> sensor.getClass().equals(StringInputSensor.class)).findFirst().get();
+        actuator = (StringOutputActuator)actuators.stream().filter(actuator -> actuator.getClass().equals(StringOutputActuator.class)).findFirst().get();;
         MnistDataReader dataReader = new MnistDataReader();
         try {
             mnistMatrix = dataReader.readData("c:/3D/Work/Pets/Java/javaBrean/examples/javaBrean/src/main/resources/mnist/train-images.idx3-ubyte", "c:/3D/Work/Pets/Java/javaBrean/examples/javaBrean/src/main/resources/mnist/train-labels.idx1-ubyte");
@@ -49,7 +60,10 @@ public class MNISTExerciser extends AbstractExerciser {
     @Override
     public boolean next() {
         index++;
-        return index != mnistMatrix.length;
+        if (index != mnistMatrix.length && index < 1) {
+            logger.info("[TEST] Expected: {}", mnistMatrix[index].getLabel());
+        }
+        return index != mnistMatrix.length && index < 1;
     }
 
     List<Neuron> visited = new ArrayList<>();
@@ -87,15 +101,23 @@ public class MNISTExerciser extends AbstractExerciser {
         }*/
 
         // 1. set input signal
-        sensor.setInputSignal(getImage(mnistMatrix[index]));
+        BufferedImage image = getImage(mnistMatrix[index]);
+        sensor.setInputSignal(image);
+        answerSensor.setInputSignal(Integer.toString(mnistMatrix[index].getLabel()).charAt(0));
+        File output = new File("c:/3D/Temp/45/i_" + index + ".bmp");
+        try {
+            ImageIO.write(image, "bmp", output);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         // 2. set output feedback
-        actuator.setSignal(Integer.toString(mnistMatrix[index].getLabel()));
+//        actuator.setSignal(Integer.toString(mnistMatrix[index].getLabel()));
     }
 
     @Override
     public List<Neuron> getTargetNeurons() {
         List<Neuron> targets = new ArrayList<>();
-        Neuron toNeuron = actuator.getNeurons().get(Integer.toString(mnistMatrix[index].getLabel()).charAt(0));
+        Neuron toNeuron = actuator.getPopulation().getNeurons().get(Integer.toString(mnistMatrix[index].getLabel()).charAt(0));
         targets.add(toNeuron);
         return targets;
     }
@@ -116,13 +138,21 @@ public class MNISTExerciser extends AbstractExerciser {
 
     @Override
     public int error() {
-        int result = actuator.getOutput();
+        List<Character> result = new ArrayList<>(actuator.getOutput());
+        actuator.getOutput().clear();
         int expectedResult = Integer.toString(mnistMatrix[index].getLabel()).charAt(0);
-        /*if (expectedResult == result) {
+        if (result.size() == 1 && result.contains(expectedResult)) {
             logger.info("[MATCHED] Expected {}, got {}.", expectedResult, result);
+            return 0;
+        } else if (result.size() == 1 && result.contains(expectedResult)) {
+            logger.info("[PARTMATCHED] Expected {}, got {}.", expectedResult, result);
+            return 0;
         } else {
             logger.info("[NOTMATCHED] Expected {}, got {}.", expectedResult, result);
-        }*/
-        return Math.abs(result - expectedResult);
+            if (result.size() == 0)
+                return 3;
+            return 2;
+        }
+        //return Math.abs(result - expectedResult);
     }
 }
